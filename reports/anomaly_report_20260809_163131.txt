@@ -1,0 +1,20 @@
+============================================================
+BUSINESS ANOMALY REPORT
+============================================================
+
+Critical anomalies: 2
+Warnings: 0
+
+CRITICAL ANOMALIES
+------------------------------------------------------------
+Metric: Conversion_Rate
+Current value: 2.4
+Change: -37.17%
+Baseline deviation: -35.93%
+Anomaly score: 6
+
+Metric: Refunds
+Current value: 3500
+Change: +94.44%
+Baseline deviation: +117.78%
+Anomaly score: 6

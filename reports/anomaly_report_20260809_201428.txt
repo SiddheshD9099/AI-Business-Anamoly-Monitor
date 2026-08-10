@@ -1,0 +1,147 @@
+======================================================================
+BUSINESS ANOMALY REPORT
+======================================================================
+Generated: 2026-08-09 20:14:37
+
+ANOMALY SUMMARY
+----------------------------------------------------------------------
+Total metrics analyzed: 6
+Critical anomalies: 2
+Warnings: 0
+High-impact metrics: 2
+
+METRIC DETAILS
+----------------------------------------------------------------------
+
+Metric: Revenue
+Current value: 150000.00
+Day change: +2.04%
+Baseline deviation: +10.18%
+Z-score: 1.66
+Anomaly score: 1
+Severity: NORMAL
+Business impact: LOW
+Priority: P3
+
+Metric: Orders
+Current value: 1620.00
+Day change: +1.25%
+Baseline deviation: +5.19%
+Z-score: 1.85
+Anomaly score: 0
+Severity: NORMAL
+Business impact: LOW
+Priority: P3
+
+Metric: Conversion_Rate
+Current value: 2.40
+Day change: -37.17%
+Baseline deviation: -35.93%
+Z-score: -22.44
+Anomaly score: 6
+Severity: CRITICAL
+Business impact: HIGH
+Priority: P0
+
+Metric: Traffic
+Current value: 65000.00
+Day change: +4.84%
+Baseline deviation: +36.84%
+Z-score: 1.88
+Anomaly score: 2
+Severity: NORMAL
+Business impact: LOW
+Priority: P3
+
+Metric: Cost
+Current value: 32000.00
+Day change: +3.23%
+Baseline deviation: +11.44%
+Z-score: 2.33
+Anomaly score: 2
+Severity: NORMAL
+Business impact: LOW
+Priority: P3
+
+Metric: Refunds
+Current value: 3500.00
+Day change: +94.44%
+Baseline deviation: +117.78%
+Z-score: 15.71
+Anomaly score: 6
+Severity: CRITICAL
+Business impact: HIGH
+Priority: P0
+
+BUSINESS FINDINGS
+----------------------------------------------------------------------
+
+Type: TRAFFIC_CONVERSION_MISMATCH
+Severity: CRITICAL
+Observation: Traffic is significantly above its recent baseline while conversion rate is significantly below its baseline.
+Possible implication: The additional traffic may be lower quality, or users may be encountering problems in the conversion funnel.
+Recommended checks:
+  • Review traffic sources
+  • Check recent marketing campaigns
+  • Compare landing page conversion
+  • Check checkout and payment errors
+  • Review conversion by device
+
+Type: REFUND_ACCELERATION
+Severity: CRITICAL
+Observation: Refunds are increasing substantially faster than orders.
+Possible implication: This may indicate a deterioration in product quality, delivery performance, customer experience, or order accuracy.
+Recommended checks:
+  • Review refund reasons
+  • Check product-level refund rates
+  • Review delivery failures
+  • Check customer complaints
+  • Compare refunds by product category
+
+AI BUSINESS SUMMARY
+----------------------------------------------------------------------
+Critical anomalies detected in Conversion Rate and Refund volume requiring immediate priority attention, while Revenue, Orders, Traffic, and Cost remain within normal baseline parameters.
+
+Key Findings:
+  • Conversion Rate experienced a critical P0 drop of -37.17277486910995% to 2.4, sitting -35.92677345537758% below baseline despite Traffic increasing 4.8387096774193505% to 65000.
+  • Refunds experienced a critical P0 spike of 94.44444444444444% to 3500, a baseline deviation of 117.77777777777779%, significantly outstripping Order growth of 1.2499999999999956% (1620 orders).
+  • Revenue (150000), Orders (1620), Traffic (65000), and Cost (32000) remained normal in performance with low business impact.
+
+Possible Causes:
+  • Additional incoming traffic may be of lower intent or quality, or prospective customers may be encountering friction/errors in the checkout conversion funnel.
+  • The sharp acceleration in refunds relative to order volume may indicate product quality issues, delivery failures, customer experience issues, or order fulfillment errors.
+
+Recommended Actions:
+  • Audit traffic sources, recent marketing campaigns, landing page performance, device-specific behavior, and checkout/payment gateway error logs.
+  • Analyze refund reasons, product-level and category-level refund rates, fulfillment failure reports, and recent customer support complaints.
+
+Priority Message:
+Immediate P0 priority focus is required to resolve the Conversion Rate drop and Refund acceleration to prevent further operational and financial erosion.
+
+======================================================================
+
+======================================================================
+AI BUSINESS ANALYSIS
+======================================================================
+
+Executive Summary:
+Critical anomalies detected in Conversion Rate and Refund volume requiring immediate priority attention, while Revenue, Orders, Traffic, and Cost remain within normal baseline parameters.
+
+Key Findings:
+
+• Conversion Rate experienced a critical P0 drop of -37.17277486910995% to 2.4, sitting -35.92677345537758% below baseline despite Traffic increasing 4.8387096774193505% to 65000.
+• Refunds experienced a critical P0 spike of 94.44444444444444% to 3500, a baseline deviation of 117.77777777777779%, significantly outstripping Order growth of 1.2499999999999956% (1620 orders).
+• Revenue (150000), Orders (1620), Traffic (65000), and Cost (32000) remained normal in performance with low business impact.
+
+Possible Causes:
+
+• Additional incoming traffic may be of lower intent or quality, or prospective customers may be encountering friction/errors in the checkout conversion funnel.
+• The sharp acceleration in refunds relative to order volume may indicate product quality issues, delivery failures, customer experience issues, or order fulfillment errors.
+
+Recommended Actions:
+
+• Audit traffic sources, recent marketing campaigns, landing page performance, device-specific behavior, and checkout/payment gateway error logs.
+• Analyze refund reasons, product-level and category-level refund rates, fulfillment failure reports, and recent customer support complaints.
+
+Priority Message:
+Immediate P0 priority focus is required to resolve the Conversion Rate drop and Refund acceleration to prevent further operational and financial erosion.

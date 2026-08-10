@@ -1,0 +1,326 @@
+import json
+import os
+
+from dotenv import load_dotenv
+from google import genai
+
+
+# ======================================================
+# LOAD ENVIRONMENT VARIABLES
+# ======================================================
+
+load_dotenv()
+
+
+# ======================================================
+# GEMINI CONFIGURATION
+# ======================================================
+
+API_KEY = os.getenv("GEMINI_API_KEY")
+
+MODEL_NAME = "gemini-3.6-flash"
+
+
+# ======================================================
+# CREATE GEMINI CLIENT
+# ======================================================
+
+client = None
+
+if API_KEY:
+
+    client = genai.Client(
+        api_key=API_KEY
+    )
+
+
+# ======================================================
+# FALLBACK RESPONSE
+# ======================================================
+
+def create_fallback_summary(
+    anomaly_results,
+    business_findings
+):
+    """
+    Generate a deterministic summary when Gemini
+    is unavailable.
+    """
+
+    critical_metrics = [
+        result
+        for result in anomaly_results
+        if result.get("severity") == "CRITICAL"
+    ]
+
+    high_impact_metrics = [
+        result
+        for result in anomaly_results
+        if result.get("business_impact") == "HIGH"
+    ]
+
+    key_findings = []
+
+    for result in critical_metrics:
+
+        metric = result.get(
+            "metric",
+            "Unknown metric"
+        )
+
+        change = result.get(
+            "percentage_change"
+        )
+
+        if change is not None:
+
+            key_findings.append(
+                f"{metric} changed by "
+                f"{change:+.2f}% and was classified "
+                f"as a critical anomaly."
+            )
+
+        else:
+
+            key_findings.append(
+                f"{metric} was classified "
+                f"as a critical anomaly."
+            )
+
+    possible_causes = []
+
+    for finding in business_findings:
+
+        implication = finding.get(
+            "possible_implication"
+        )
+
+        if implication:
+
+            possible_causes.append(
+                implication
+            )
+
+    recommended_actions = []
+
+    for finding in business_findings:
+
+        checks = finding.get(
+            "recommended_checks",
+            []
+        )
+
+        for check in checks:
+
+            if check not in recommended_actions:
+
+                recommended_actions.append(
+                    check
+                )
+
+    if critical_metrics:
+
+        executive_summary = (
+            f"{len(critical_metrics)} critical "
+            "business anomalies were detected. "
+            f"{len(high_impact_metrics)} of the "
+            "affected metrics have high potential "
+            "business impact and should be investigated."
+        )
+
+    else:
+
+        executive_summary = (
+            "No critical business anomalies were "
+            "detected in the latest analysis."
+        )
+
+    if high_impact_metrics:
+
+        priority_message = (
+            "Prioritize investigation of metrics "
+            "with HIGH business impact."
+        )
+
+    else:
+
+        priority_message = (
+            "Continue monitoring the detected metrics "
+            "for persistent abnormal behavior."
+        )
+
+    return {
+        "executive_summary": executive_summary,
+        "key_findings": key_findings,
+        "possible_causes": possible_causes,
+        "recommended_actions": recommended_actions,
+        "priority_message": priority_message,
+    }
+
+
+# ======================================================
+# GEMINI BUSINESS SUMMARY
+# ======================================================
+
+def generate_business_summary(
+    anomaly_results,
+    business_findings
+):
+    """
+    Generate an executive business summary using
+    Gemini.
+
+    If Gemini is unavailable, automatically fall
+    back to deterministic Python-generated output.
+    """
+
+    # --------------------------------------------------
+    # Check API key
+    # --------------------------------------------------
+
+    if not API_KEY:
+
+        print(
+            "WARNING: GEMINI_API_KEY not found. "
+            "Using fallback analysis."
+        )
+
+        return create_fallback_summary(
+            anomaly_results,
+            business_findings
+        )
+
+    # --------------------------------------------------
+    # Prepare verified analysis data
+    # --------------------------------------------------
+
+    analysis_data = {
+        "anomaly_results": anomaly_results,
+        "business_findings": business_findings,
+    }
+
+    data_json = json.dumps(
+        analysis_data,
+        indent=2,
+        default=str
+    )
+
+    # --------------------------------------------------
+    # Prompt
+    # --------------------------------------------------
+
+    prompt = f"""
+You are a senior business data analyst.
+
+You are given VERIFIED statistical analysis
+generated by a Python anomaly detection system.
+
+Your task is to explain the findings in clear,
+concise business language.
+
+IMPORTANT RULES:
+
+1. Do NOT invent numbers.
+2. Do NOT modify any provided numbers.
+3. Do NOT perform new statistical calculations.
+4. Treat anomaly results as verified facts.
+5. Clearly separate observations from possible causes.
+6. Never present a possible cause as a confirmed cause.
+7. Focus on business impact.
+8. Give practical investigation recommendations.
+9. Do not mention Python, programming, APIs, or prompts.
+10. Keep the response suitable for an executive dashboard.
+
+Return ONLY valid JSON using exactly these fields:
+
+{{
+    "executive_summary": "Short executive summary.",
+    "key_findings": [
+        "Finding 1",
+        "Finding 2"
+    ],
+    "possible_causes": [
+        "Possible cause 1",
+        "Possible cause 2"
+    ],
+    "recommended_actions": [
+        "Action 1",
+        "Action 2"
+    ],
+    "priority_message": "Most important priority."
+}}
+
+VERIFIED ANALYSIS:
+
+{data_json}
+"""
+
+    # --------------------------------------------------
+    # Call Gemini
+    # --------------------------------------------------
+
+    try:
+
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json"
+            }
+        )
+
+        # --------------------------------------------------
+        # Parse Gemini JSON
+        # --------------------------------------------------
+
+        result = json.loads(
+            response.text
+        )
+
+        # --------------------------------------------------
+        # Validate expected fields
+        # --------------------------------------------------
+
+        required_fields = [
+            "executive_summary",
+            "key_findings",
+            "possible_causes",
+            "recommended_actions",
+            "priority_message",
+        ]
+
+        for field in required_fields:
+
+            if field not in result:
+
+                raise ValueError(
+                    f"Gemini response missing field: {field}"
+                )
+
+        return result
+
+    # --------------------------------------------------
+    # API / JSON / network failure
+    # --------------------------------------------------
+
+    except Exception as error:
+
+        print()
+
+        print(
+            "WARNING: Gemini analysis failed."
+        )
+
+        print(
+            f"Reason: {error}"
+        )
+
+        print(
+            "Using deterministic fallback analysis."
+        )
+
+        return create_fallback_summary(
+            anomaly_results,
+            business_findings
+        )
+

@@ -1,0 +1,54 @@
+============================================================
+BUSINESS ANOMALY REPORT
+============================================================
+
+Critical anomalies: 2
+Warnings: 0
+
+CRITICAL ANOMALIES
+------------------------------------------------------------
+Metric: Conversion_Rate
+Current value: 2.4
+Change: -37.17%
+Baseline deviation: -35.93%
+Anomaly score: 6
+
+Metric: Refunds
+Current value: 3500
+Change: +94.44%
+Baseline deviation: +117.78%
+Anomaly score: 6
+
+
+======================================================================
+AI BUSINESS ANALYSIS
+======================================================================
+
+Executive Summary:
+2 critical business anomalies were detected. 2 of the affected metrics have high potential business impact and should be investigated.
+
+Key Findings:
+
+• Conversion_Rate changed by -37.17% and was classified as a critical anomaly.
+• Refunds changed by +94.44% and was classified as a critical anomaly.
+
+Possible Causes:
+
+• The additional traffic may be lower quality, or users may be encountering problems in the conversion funnel.
+• This may indicate a deterioration in product quality, delivery performance, customer experience, or order accuracy.
+
+Recommended Actions:
+
+• Review traffic sources
+• Check recent marketing campaigns
+• Compare landing page conversion
+• Check checkout and payment errors
+• Review conversion by device
+• Review refund reasons
+• Check product-level refund rates
+• Review delivery failures
+• Check customer complaints
+• Compare refunds by product category
+
+Priority Message:
+Prioritize investigation of metrics with HIGH business impact.
