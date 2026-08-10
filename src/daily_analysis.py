@@ -1,9 +1,17 @@
-from ai_analyzer import (
-    generate_business_summary
+from history_db import (
+    save_analysis
+)
+
+from email_alert import (
+    send_alert_email
 )
 
 from data_reader import (
     read_business_data
+)
+
+from ai_analyzer import (
+    generate_business_summary
 )
 
 from data_validator import (
@@ -42,56 +50,94 @@ from datetime import datetime
 from pathlib import Path
 
 
+# ======================================================
+# ANALYZE LATEST BUSINESS DAY
+# ======================================================
+
 def analyze_latest_day(file_path):
     """
     Read, clean, analyze, and detect anomalies
     for the latest available business day.
     """
 
-    # --------------------------------------------------
+    # ==================================================
     # 1. READ DATA
-    # --------------------------------------------------
+    # ==================================================
 
     df = read_business_data(
         file_path
     )
 
-    # --------------------------------------------------
+    # ==================================================
     # 2. VALIDATE DATA
-    # --------------------------------------------------
+    # ==================================================
 
     validate_columns(
         df
     )
 
-    # --------------------------------------------------
+    # ==================================================
     # 3. CLEAN DATA
-    # --------------------------------------------------
+    # ==================================================
 
     df = clean_data(
         df
     )
 
-    # --------------------------------------------------
-    # 4. GET CONFIGURED METRICS
-    # --------------------------------------------------
+    # ==================================================
+    # 4. SORT BY DATE
+    # ==================================================
+
+    if "Date" in df.columns:
+
+        df["Date"] = (
+            __import__("pandas")
+            .to_datetime(
+                df["Date"],
+                errors="coerce"
+            )
+        )
+
+        df = (
+            df
+            .dropna(
+                subset=["Date"]
+            )
+            .sort_values(
+                "Date"
+            )
+            .reset_index(
+                drop=True
+            )
+        )
+
+    if df.empty:
+
+        raise ValueError(
+            "No valid business data available "
+            "after cleaning."
+        )
+
+    # ==================================================
+    # 5. GET CONFIGURED METRICS
+    # ==================================================
 
     metrics = list(
         METRIC_CONFIG.keys()
     )
 
-    # --------------------------------------------------
-    # 5. CALCULATE DAY-OVER-DAY CHANGES
-    # --------------------------------------------------
+    # ==================================================
+    # 6. CALCULATE DAY-OVER-DAY CHANGES
+    # ==================================================
 
     df = add_percentage_changes(
         df,
         metrics
     )
 
-    # --------------------------------------------------
-    # 6. CALCULATE 7-DAY BASELINE
-    # --------------------------------------------------
+    # ==================================================
+    # 7. CALCULATE 7-DAY MOVING AVERAGE
+    # ==================================================
 
     df = add_moving_average(
         df,
@@ -99,18 +145,18 @@ def analyze_latest_day(file_path):
         window=7
     )
 
-    # --------------------------------------------------
-    # 7. CALCULATE BASELINE DEVIATION
-    # --------------------------------------------------
+    # ==================================================
+    # 8. CALCULATE BASELINE DEVIATION
+    # ==================================================
 
     df = add_baseline_deviation(
         df,
         metrics
     )
 
-    # --------------------------------------------------
-    # 8. CALCULATE Z-SCORES
-    # --------------------------------------------------
+    # ==================================================
+    # 9. CALCULATE Z-SCORES
+    # ==================================================
 
     df = add_z_scores(
         df,
@@ -118,17 +164,17 @@ def analyze_latest_day(file_path):
         window=7
     )
 
-    # --------------------------------------------------
-    # 9. GET LATEST DAY
-    # --------------------------------------------------
+    # ==================================================
+    # 10. GET LATEST BUSINESS DAY
+    # ==================================================
 
     latest = df.iloc[-1]
 
     results = []
 
-    # --------------------------------------------------
-    # 10. ANALYZE EACH METRIC
-    # --------------------------------------------------
+    # ==================================================
+    # 11. ANALYZE EACH METRIC
+    # ==================================================
 
     for metric in metrics:
 
@@ -161,28 +207,127 @@ def analyze_latest_day(file_path):
 
 
 # ======================================================
-# MAIN PROGRAM
+# RUN COMPLETE ANALYSIS
 # ======================================================
 
-if __name__ == "__main__":
+def run_full_analysis(file_path):
+    """
+    Run the complete business anomaly monitoring pipeline.
 
-    # --------------------------------------------------
-    # 1. INPUT FILE
-    # --------------------------------------------------
+    Pipeline:
 
-    file_path = "data/business_metrics.xlsx"
+        Excel
+        ↓
+        Validation
+        ↓
+        Cleaning
+        ↓
+        Statistical analysis
+        ↓
+        Business relationship analysis
+        ↓
+        Gemini AI analysis
+        ↓
+        Report generation
+        ↓
+        SQLite persistence
+        ↓
+        Email alert
+    """
 
-    # --------------------------------------------------
-    # 2. RUN STATISTICAL ANALYSIS
-    # --------------------------------------------------
+    # ==================================================
+    # 1. READ SOURCE DATA
+    # ==================================================
+
+    source_df = read_business_data(
+        file_path
+    )
+
+    # ==================================================
+    # 2. VALIDATE SOURCE DATA
+    # ==================================================
+
+    validate_columns(
+        source_df
+    )
+
+    # ==================================================
+    # 3. DETERMINE LATEST BUSINESS DATE
+    # ==================================================
+
+    if "Date" not in source_df.columns:
+
+        raise ValueError(
+            "The business data must contain "
+            "a 'Date' column."
+        )
+
+    import pandas as pd
+
+    source_df["Date"] = pd.to_datetime(
+        source_df["Date"],
+        errors="coerce"
+    )
+
+    source_df = (
+        source_df
+        .dropna(
+            subset=["Date"]
+        )
+        .sort_values(
+            "Date"
+        )
+        .reset_index(
+            drop=True
+        )
+    )
+
+    if source_df.empty:
+
+        raise ValueError(
+            "No valid business dates were found."
+        )
+
+    latest_date = (
+        source_df["Date"]
+        .iloc[-1]
+    )
+
+    latest_date = (
+        latest_date.strftime(
+            "%Y-%m-%d"
+        )
+    )
+
+    print()
+    print(
+        "=" * 70
+    )
+
+    print(
+        "BUSINESS ANOMALY MONITOR"
+    )
+
+    print(
+        "=" * 70
+    )
+
+    print(
+        f"Business date being analyzed: "
+        f"{latest_date}"
+    )
+
+    # ==================================================
+    # 4. STATISTICAL ANALYSIS
+    # ==================================================
 
     results = analyze_latest_day(
         file_path
     )
 
-    # --------------------------------------------------
-    # 3. EVALUATE BUSINESS RELATIONSHIPS
-    # --------------------------------------------------
+    # ==================================================
+    # 5. BUSINESS RELATIONSHIP ANALYSIS
+    # ==================================================
 
     business_findings = (
         evaluate_business_relationships(
@@ -191,251 +336,8 @@ if __name__ == "__main__":
     )
 
     # ==================================================
-    # 4. PRINT ANOMALY ANALYSIS
+    # 6. AI ANALYSIS
     # ==================================================
-
-    print()
-
-    print("=" * 70)
-    print(
-        "BUSINESS ANOMALY ANALYSIS"
-    )
-    print("=" * 70)
-
-    for result in results:
-
-        print()
-
-        print(
-            f"Metric: "
-            f"{result['metric']}"
-        )
-
-        print(
-            f"Current Value: "
-            f"{result['current_value']}"
-        )
-
-        # ----------------------------------------------
-        # Day-over-day change
-        # ----------------------------------------------
-
-        percentage_change = (
-            result["percentage_change"]
-        )
-
-        if percentage_change is not None:
-
-            print(
-                f"Day Change: "
-                f"{percentage_change:+.2f}%"
-            )
-
-        else:
-
-            print(
-                "Day Change: N/A"
-            )
-
-        # ----------------------------------------------
-        # Baseline deviation
-        # ----------------------------------------------
-
-        baseline_deviation = (
-            result["baseline_deviation"]
-        )
-
-        if baseline_deviation is not None:
-
-            print(
-                f"Baseline Deviation: "
-                f"{baseline_deviation:+.2f}%"
-            )
-
-        else:
-
-            print(
-                "Baseline Deviation: N/A"
-            )
-
-        # ----------------------------------------------
-        # Z-score
-        # ----------------------------------------------
-
-        z_score = (
-            result["z_score"]
-        )
-
-        if z_score is not None:
-
-            print(
-                f"Z-score: "
-                f"{z_score:.2f}"
-            )
-
-        else:
-
-            print(
-                "Z-score: N/A"
-            )
-
-        # ----------------------------------------------
-        # Anomaly score
-        # ----------------------------------------------
-
-        print(
-            f"Anomaly Score: "
-            f"{result['score']}"
-        )
-
-        # ----------------------------------------------
-        # Severity
-        # ----------------------------------------------
-
-        print(
-            f"Severity: "
-            f"{result['severity']}"
-        )
-
-        # ----------------------------------------------
-        # Business impact
-        # ----------------------------------------------
-
-        print(
-            f"Business Impact: "
-            f"{result['business_impact']}"
-        )
-
-        # ----------------------------------------------
-        # Priority
-        # ----------------------------------------------
-
-        print(
-            f"Priority: "
-            f"{result['priority']}"
-        )
-
-        print(
-            "-" * 70
-        )
-
-    # ==================================================
-    # 5. PRINT BUSINESS FINDINGS
-    # ==================================================
-
-    print()
-
-    print("=" * 70)
-    print(
-        "BUSINESS FINDINGS"
-    )
-    print("=" * 70)
-
-    if not business_findings:
-
-        print()
-
-        print(
-            "No significant business "
-            "relationships were detected."
-        )
-
-    else:
-
-        for finding in business_findings:
-
-            print()
-
-            print(
-                f"Type: "
-                f"{finding['type']}"
-            )
-
-            print(
-                f"Severity: "
-                f"{finding['severity']}"
-            )
-
-            print(
-                f"Observation: "
-                f"{finding['observation']}"
-            )
-
-            print(
-                f"Possible Implication: "
-                f"{finding['possible_implication']}"
-            )
-
-            print(
-                "Recommended Checks:"
-            )
-
-            for check in finding[
-                "recommended_checks"
-            ]:
-
-                print(
-                    f"  • {check}"
-                )
-
-            print(
-                "-" * 70
-            )
-
-    # ==================================================
-    # 6. GENERATE BASIC BUSINESS REPORT
-    # ==================================================
-
-    # ==================================================
-    # 7. CREATE REPORTS DIRECTORY
-    # ==================================================
-
-    BASE_DIR = (
-        Path(__file__)
-        .resolve()
-        .parent
-        .parent
-    )
-
-    reports_dir = (
-        BASE_DIR / "reports"
-    )
-
-    reports_dir.mkdir(
-        exist_ok=True
-    )
-
-    # ==================================================
-    # 8. CREATE TIMESTAMP
-    # ==================================================
-
-    timestamp = (
-        datetime.now().strftime(
-            "%Y%m%d_%H%M%S"
-        )
-    )
-
-    # ==================================================
-    # 9. CREATE REPORT PATH
-    # ==================================================
-
-    report_path = (
-        reports_dir
-        / f"anomaly_report_{timestamp}.txt"
-    )
-
-
-    # ==================================================
-    # 11. RUN GEMINI AI ANALYSIS
-    # ==================================================
-
-    print()
-
-    print("=" * 70)
-    print(
-        "AI BUSINESS ANALYSIS"
-    )
-    print("=" * 70)
 
     ai_summary = (
         generate_business_summary(
@@ -444,9 +346,9 @@ if __name__ == "__main__":
         )
     )
 
-# ==================================================
-# GENERATE FINAL REPORT
-# ==================================================
+    # ==================================================
+    # 7. GENERATE REPORT
+    # ==================================================
 
     report = generate_report(
         results,
@@ -454,9 +356,71 @@ if __name__ == "__main__":
         ai_summary
     )
 
-# ==================================================
-# SAVE FINAL REPORT
-# ==================================================
+    # ==================================================
+    # 8. SAVE ANALYSIS TO DATABASE
+    # ==================================================
+
+    run_id = save_analysis(
+
+        results,
+
+        business_findings,
+
+        analysis_date=latest_date
+    )
+
+    print()
+    print(
+        f"Analysis saved to database. "
+        f"Run ID: {run_id}"
+    )
+
+    # ==================================================
+    # 9. SEND EMAIL ALERT
+    # ==================================================
+
+    email_sent = send_alert_email(
+
+        results,
+
+        business_findings,
+
+        ai_summary,
+
+        run_id=run_id,
+
+        analysis_date=latest_date
+    )
+
+    # ==================================================
+    # 10. SAVE REPORT TO FILE
+    # ==================================================
+
+    base_dir = (
+        Path(__file__)
+        .resolve()
+        .parent
+        .parent
+    )
+
+    reports_dir = (
+        base_dir / "reports"
+    )
+
+    reports_dir.mkdir(
+        exist_ok=True
+    )
+
+    timestamp = (
+        datetime.now().strftime(
+            "%Y%m%d_%H%M%S"
+        )
+    )
+
+    report_path = (
+        reports_dir
+        / f"anomaly_report_{timestamp}.txt"
+    )
 
     with open(
         report_path,
@@ -464,219 +428,419 @@ if __name__ == "__main__":
         encoding="utf-8"
     ) as file:
 
-        file.write(report)
-
-    # ==================================================
-    # 12. PRINT AI EXECUTIVE SUMMARY
-    # ==================================================
+        file.write(
+            report
+        )
 
     print()
-
-    print(
-        "Executive Summary:"
-    )
-
-    print(
-        ai_summary.get(
-            "executive_summary",
-            "No executive summary generated."
-        )
-    )
-
-    # ==================================================
-    # 13. PRINT AI KEY FINDINGS
-    # ==================================================
-
-    print()
-
-    print(
-        "Key Findings:"
-    )
-
-    key_findings = ai_summary.get(
-        "key_findings",
-        []
-    )
-
-    if key_findings:
-
-        for finding in key_findings:
-
-            print(
-                f"  • {finding}"
-            )
-
-    else:
-
-        print(
-            "  No key findings generated."
-        )
-
-    # ==================================================
-    # 14. PRINT POSSIBLE CAUSES
-    # ==================================================
-
-    print()
-
-    print(
-        "Possible Causes:"
-    )
-
-    possible_causes = ai_summary.get(
-        "possible_causes",
-        []
-    )
-
-    if possible_causes:
-
-        for cause in possible_causes:
-
-            print(
-                f"  • {cause}"
-            )
-
-    else:
-
-        print(
-            "  No possible causes generated."
-        )
-
-    # ==================================================
-    # 15. PRINT RECOMMENDED ACTIONS
-    # ==================================================
-
-    print()
-
-    print(
-        "Recommended Actions:"
-    )
-
-    recommended_actions = ai_summary.get(
-        "recommended_actions",
-        []
-    )
-
-    if recommended_actions:
-
-        for action in recommended_actions:
-
-            print(
-                f"  • {action}"
-            )
-
-    else:
-
-        print(
-            "  No recommended actions generated."
-        )
-
-    # ==================================================
-    # 16. PRINT PRIORITY MESSAGE
-    # ==================================================
-
-    print()
-
-    print(
-        "Priority Message:"
-    )
-
-    print(
-        ai_summary.get(
-            "priority_message",
-            "No priority message generated."
-        )
-    )
-
-    # ==================================================
-    # 17. SAVE AI ANALYSIS TO REPORT
-    # ==================================================
-
-    with open(
-        report_path,
-        "a",
-        encoding="utf-8"
-    ) as file:
-
-        file.write(
-            "\n\n"
-        )
-
-        file.write(
-            "=" * 70
-        )
-
-        file.write(
-            "\nAI BUSINESS ANALYSIS\n"
-        )
-
-        file.write(
-            "=" * 70
-        )
-
-        file.write(
-            "\n\nExecutive Summary:\n"
-        )
-
-        file.write(
-            ai_summary.get(
-                "executive_summary",
-                "No executive summary generated."
-            )
-        )
-
-        file.write(
-            "\n\nKey Findings:\n"
-        )
-
-        for finding in key_findings:
-
-            file.write(
-                f"\n• {finding}"
-            )
-
-        file.write(
-            "\n\nPossible Causes:\n"
-        )
-
-        for cause in possible_causes:
-
-            file.write(
-                f"\n• {cause}"
-            )
-
-        file.write(
-            "\n\nRecommended Actions:\n"
-        )
-
-        for action in recommended_actions:
-
-            file.write(
-                f"\n• {action}"
-            )
-
-        file.write(
-            "\n\nPriority Message:\n"
-        )
-
-        file.write(
-            ai_summary.get(
-                "priority_message",
-                "No priority message generated."
-            )
-        )
-
-    # ==================================================
-    # 18. FINAL OUTPUT
-    # ==================================================
-
-    print()
-
-    print("=" * 70)
-
     print(
         f"Report saved to: "
         f"{report_path}"
     )
 
-    print("=" * 70)
+    # ==================================================
+    # 11. RETURN COMPLETE RESULT
+    # ==================================================
 
+    return (
+
+        results,
+
+        business_findings,
+
+        ai_summary,
+
+        report,
+
+        run_id,
+
+        email_sent
+    )
+
+
+# ======================================================
+# MAIN PROGRAM
+# ======================================================
+
+if __name__ == "__main__":
+
+    file_path = (
+        "data/business_metrics.xlsx"
+    )
+
+    try:
+
+        (
+            results,
+            business_findings,
+            ai_summary,
+            report,
+            run_id,
+            email_sent
+        ) = run_full_analysis(
+            file_path
+        )
+
+        # ==================================================
+        # PRINT RESULTS
+        # ==================================================
+
+        print()
+        print(
+            "=" * 70
+        )
+
+        print(
+            "BUSINESS ANOMALY ANALYSIS"
+        )
+
+        print(
+            "=" * 70
+        )
+
+        for result in results:
+
+            print()
+
+            print(
+                f"Metric: "
+                f"{result.get('metric')}"
+            )
+
+            print(
+                f"Current Value: "
+                f"{result.get('current_value')}"
+            )
+
+            percentage_change = (
+                result.get(
+                    "percentage_change"
+                )
+            )
+
+            if percentage_change is not None:
+
+                try:
+
+                    print(
+                        f"Day Change: "
+                        f"{float(percentage_change):+.2f}%"
+                    )
+
+                except (
+                    TypeError,
+                    ValueError
+                ):
+
+                    print(
+                        f"Day Change: "
+                        f"{percentage_change}"
+                    )
+
+            else:
+
+                print(
+                    "Day Change: N/A"
+                )
+
+            baseline_deviation = (
+                result.get(
+                    "baseline_deviation"
+                )
+            )
+
+            if baseline_deviation is not None:
+
+                try:
+
+                    print(
+                        f"Baseline Deviation: "
+                        f"{float(baseline_deviation):+.2f}%"
+                    )
+
+                except (
+                    TypeError,
+                    ValueError
+                ):
+
+                    print(
+                        f"Baseline Deviation: "
+                        f"{baseline_deviation}"
+                    )
+
+            else:
+
+                print(
+                    "Baseline Deviation: N/A"
+                )
+
+            z_score = (
+                result.get(
+                    "z_score"
+                )
+            )
+
+            if z_score is not None:
+
+                try:
+
+                    print(
+                        f"Z-score: "
+                        f"{float(z_score):.2f}"
+                    )
+
+                except (
+                    TypeError,
+                    ValueError
+                ):
+
+                    print(
+                        f"Z-score: "
+                        f"{z_score}"
+                    )
+
+            else:
+
+                print(
+                    "Z-score: N/A"
+                )
+
+            print(
+                f"Anomaly Score: "
+                f"{result.get('score')}"
+            )
+
+            print(
+                f"Severity: "
+                f"{result.get('severity')}"
+            )
+
+            print(
+                f"Business Impact: "
+                f"{result.get('business_impact')}"
+            )
+
+            print(
+                f"Priority: "
+                f"{result.get('priority')}"
+            )
+
+            print(
+                "-" * 70
+            )
+
+        # ==================================================
+        # BUSINESS FINDINGS
+        # ==================================================
+
+        print()
+        print(
+            "=" * 70
+        )
+
+        print(
+            "BUSINESS FINDINGS"
+        )
+
+        print(
+            "=" * 70
+        )
+
+        if not business_findings:
+
+            print()
+            print(
+                "No significant business "
+                "relationships were detected."
+            )
+
+        else:
+
+            for finding in business_findings:
+
+                print()
+
+                print(
+                    f"Type: "
+                    f"{finding.get('type')}"
+                )
+
+                print(
+                    f"Severity: "
+                    f"{finding.get('severity')}"
+                )
+
+                print(
+                    f"Observation: "
+                    f"{finding.get('observation')}"
+                )
+
+                print(
+                    f"Possible Implication: "
+                    f"{finding.get('possible_implication')}"
+                )
+
+                print(
+                    "Recommended Checks:"
+                )
+
+                for check in finding.get(
+                    "recommended_checks",
+                    []
+                ):
+
+                    print(
+                        f"  • {check}"
+                    )
+
+                print(
+                    "-" * 70
+                )
+
+        # ==================================================
+        # AI SUMMARY
+        # ==================================================
+
+        print()
+        print(
+            "=" * 70
+        )
+
+        print(
+            "AI BUSINESS ANALYSIS"
+        )
+
+        print(
+            "=" * 70
+        )
+
+        if isinstance(
+            ai_summary,
+            dict
+        ):
+
+            print()
+            print(
+                "Executive Summary:"
+            )
+
+            print(
+                ai_summary.get(
+                    "executive_summary",
+                    "No executive summary generated."
+                )
+            )
+
+            print()
+            print(
+                "Key Findings:"
+            )
+
+            for finding in ai_summary.get(
+                "key_findings",
+                []
+            ):
+
+                print(
+                    f"  • {finding}"
+                )
+
+            print()
+            print(
+                "Possible Causes:"
+            )
+
+            for cause in ai_summary.get(
+                "possible_causes",
+                []
+            ):
+
+                print(
+                    f"  • {cause}"
+                )
+
+            print()
+            print(
+                "Recommended Actions:"
+            )
+
+            for action in ai_summary.get(
+                "recommended_actions",
+                []
+            ):
+
+                print(
+                    f"  • {action}"
+                )
+
+            print()
+            print(
+                "Priority Message:"
+            )
+
+            print(
+                ai_summary.get(
+                    "priority_message",
+                    "No priority message generated."
+                )
+            )
+
+        else:
+
+            print(
+                ai_summary
+            )
+
+        # ==================================================
+        # EMAIL STATUS
+        # ==================================================
+
+        print()
+        print(
+            "=" * 70
+        )
+
+        print(
+            "EMAIL STATUS"
+        )
+
+        print(
+            "=" * 70
+        )
+
+        if email_sent:
+
+            print(
+                "Email alert: SENT"
+            )
+
+        else:
+
+            print(
+                "Email alert: NOT SENT"
+            )
+
+        print(
+            "=" * 70
+        )
+
+    except Exception as error:
+
+        print()
+        print(
+            "=" * 70
+        )
+
+        print(
+            "ANALYSIS FAILED"
+        )
+
+        print(
+            "=" * 70
+        )
+
+        print(
+            f"Reason: {error}"
+        )
+
+        raise

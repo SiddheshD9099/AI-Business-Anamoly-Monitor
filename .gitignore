@@ -1,4 +1,32 @@
-venv/
-.env
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+.pytest_cache/
+*.pyo
+
+# Virtual environment
+venv/
+.venv/
+
+# Environment variables
+.env
+
+# SQLite database
+database/*.db
+database/*.sqlite
+database/*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Generated reports
+reports/
+
+# Excel temporary/lock files
+~$*
+data/~$*
+
+# OS files
+.DS_Store
+Thumbs.db
