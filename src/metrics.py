@@ -1,4 +1,34 @@
 import pandas as pd
+from config import METRIC_CONFIG
+
+
+METRIC_COLUMNS = tuple(METRIC_CONFIG)
+
+
+def validate_metric_columns(df, columns):
+    """Validate that every requested metric is present."""
+
+    missing_columns = [
+        column
+        for column in columns
+        if column not in df.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            f"Missing metric columns: {missing_columns}"
+        )
+
+    return True
+
+
+def validate_metric_schema(df):
+    """Validate all BFSI metric columns configured for analysis."""
+
+    return validate_metric_columns(
+        df,
+        METRIC_COLUMNS
+    )
 
 
 def calculate_percentage_change(current, previous):
@@ -17,6 +47,7 @@ def add_percentage_changes(df, columns):
     Add day-over-day percentage change columns.
     """
 
+    validate_metric_columns(df, columns)
     df = df.copy()
 
     for column in columns:
@@ -35,6 +66,7 @@ def add_moving_average(df, columns, window=7):
     Calculate rolling average for each metric.
     """
 
+    validate_metric_columns(df, columns)
     df = df.copy()
 
     for column in columns:
@@ -57,6 +89,10 @@ def add_baseline_deviation(df, columns):
     current value and moving-average baseline.
     """
 
+    validate_metric_columns(
+        df,
+        [*columns, *(f"{column}_MA" for column in columns)]
+    )
     df = df.copy()
 
     for column in columns:
@@ -78,6 +114,7 @@ def add_z_scores(df, columns, window=7):
     Calculate rolling Z-score for each metric.
     """
 
+    validate_metric_columns(df, columns)
     df = df.copy()
 
     for column in columns:

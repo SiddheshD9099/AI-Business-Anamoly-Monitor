@@ -1,38 +1,38 @@
 METRIC_CONFIG = {
 
-    "Revenue": {
-        "unit": "currency",
-        "direction": "higher_is_better",
-        "threshold": 20
-    },
-
-    "Orders": {
-        "unit": "count",
-        "direction": "higher_is_better",
-        "threshold": 20
-    },
-
-    "Conversion_Rate": {
-        "unit": "percentage",
-        "direction": "higher_is_better",
-        "threshold": 10
-    },
-
-    "Traffic": {
+    "daily_transaction_volume": {
         "unit": "count",
         "direction": "neutral",
         "threshold": 20
     },
 
-    "Cost": {
+    "avg_transaction_value": {
         "unit": "currency",
-        "direction": "lower_is_better",
-        "threshold": 15
+        "direction": "neutral",
+        "threshold": 20
     },
 
-    "Refunds": {
-        "unit": "currency",
+    "failed_transaction_rate": {
+        "unit": "percentage",
         "direction": "lower_is_better",
-        "threshold": 15
+        "threshold": 10
+    },
+
+    "chargeback_count": {
+        "unit": "count",
+        "direction": "lower_is_better",
+        "threshold": 25
+    },
+
+    "loan_disbursal_amount": {
+        "unit": "currency",
+        "direction": "neutral",
+        "threshold": 20
+    },
+
+    "npa_ratio": {
+        "unit": "percentage",
+        "direction": "lower_is_better",
+        "threshold": 10
     }
 }

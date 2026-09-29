@@ -1,14 +1,13 @@
 def find_metric(results, metric_name):
-
     for result in results:
-
         if result["metric"] == metric_name:
             return result
-
     return None
+
 
 def get_change(result):
     return result.get("percentage_change")
+
 
 def is_abnormal(result):
     return result["severity"] in [
@@ -16,249 +15,176 @@ def is_abnormal(result):
         "CRITICAL"
     ]
 
-def evaluate_business_relationships(results):
 
-    findings = []
-
-    traffic = find_metric(
+def evaluate_failed_transactions_and_chargebacks(results):
+    failed_rate = find_metric(
         results,
-        "Traffic"
+        "failed_transaction_rate"
+    )
+    chargebacks = find_metric(
+        results,
+        "chargeback_count"
     )
 
-    conversion = find_metric(
-        results,
-        "Conversion_Rate"
-    )
-
-    orders = find_metric(
-        results,
-        "Orders"
-    )
-
-    revenue = find_metric(
-        results,
-        "Revenue"
-    )
-
-    cost = find_metric(
-        results,
-        "Cost"
-    )
-
-    refunds = find_metric(
-        results,
-        "Refunds"
-    )
-
-def evaluate_traffic_conversion(results):
-
-    traffic = find_metric(
-        results,
-        "Traffic"
-    )
-
-    conversion = find_metric(
-        results,
-        "Conversion_Rate"
-    )
-
-    if not traffic or not conversion:
+    if not failed_rate or not chargebacks:
         return None
 
-    traffic_baseline = (
-        traffic["baseline_deviation"]
+    failed_rate_deviation = failed_rate.get(
+        "baseline_deviation"
     )
-
-    conversion_baseline = (
-        conversion["baseline_deviation"]
+    chargeback_deviation = chargebacks.get(
+        "baseline_deviation"
     )
 
     if (
-        traffic_baseline is not None
-        and conversion_baseline is not None
-        and traffic_baseline >= 15
-        and conversion_baseline <= -10
+        failed_rate_deviation is not None
+        and chargeback_deviation is not None
+        and failed_rate_deviation >= 15
+        and chargeback_deviation >= 15
     ):
-
         return {
-            "type": "TRAFFIC_CONVERSION_MISMATCH",
-
+            "type": "TRANSACTION_FAILURE_CHARGEBACK_SPIKE",
             "severity": "CRITICAL",
-
             "metrics": [
-                "Traffic",
-                "Conversion_Rate"
+                "failed_transaction_rate",
+                "chargeback_count"
             ],
-
             "observation": (
-                "Traffic is significantly above its "
-                "recent baseline while conversion rate "
-                "is significantly below its baseline."
+                "Failed transaction rate and chargeback count "
+                "are both significantly above their recent baselines."
             ),
-
             "possible_implication": (
-                "The additional traffic may be lower "
-                "quality, or users may be encountering "
-                "problems in the conversion funnel."
+                "The joint increase may indicate a possible fraud "
+                "pattern or a payment-processing issue requiring review."
             ),
-
             "recommended_checks": [
-                "Review traffic sources",
-                "Check recent marketing campaigns",
-                "Compare landing page conversion",
-                "Check checkout and payment errors",
-                "Review conversion by device"
+                "Review affected transactions for fraud indicators",
+                "Compare chargebacks by payment channel and merchant",
+                "Inspect issuer decline codes and payment gateway health",
+                "Check authentication and dispute outcomes"
             ]
         }
 
     return None
 
-def evaluate_refunds(results):
 
-    orders = find_metric(
+def evaluate_disbursals_and_npa(results):
+    disbursals = find_metric(
         results,
-        "Orders"
+        "loan_disbursal_amount"
+    )
+    npa_ratio = find_metric(
+        results,
+        "npa_ratio"
     )
 
-    refunds = find_metric(
-        results,
-        "Refunds"
-    )
-
-    if not orders or not refunds:
+    if not disbursals or not npa_ratio:
         return None
 
-    orders_change = orders[
-        "percentage_change"
-    ]
-
-    refunds_change = refunds[
-        "percentage_change"
-    ]
+    disbursal_deviation = disbursals.get(
+        "baseline_deviation"
+    )
+    npa_deviation = npa_ratio.get(
+        "baseline_deviation"
+    )
 
     if (
-        refunds_change is not None
-        and orders_change is not None
-        and refunds_change >= 30
-        and refunds_change > orders_change
+        disbursal_deviation is not None
+        and npa_deviation is not None
+        and disbursal_deviation >= 15
+        and npa_deviation >= 10
     ):
-
         return {
-            "type": "REFUND_ACCELERATION",
-
+            "type": "DISBURSAL_NPA_RISK",
             "severity": "CRITICAL",
-
             "metrics": [
-                "Orders",
-                "Refunds"
+                "loan_disbursal_amount",
+                "npa_ratio"
             ],
-
             "observation": (
-                "Refunds are increasing substantially "
-                "faster than orders."
+                "Loan disbursal amount and NPA ratio are both "
+                "above their recent baselines."
             ),
-
             "possible_implication": (
-                "This may indicate a deterioration in "
-                "product quality, delivery performance, "
-                "customer experience, or order accuracy."
+                "The concurrent increase may signal elevated "
+                "underwriting or portfolio credit risk."
             ),
-
             "recommended_checks": [
-                "Review refund reasons",
-                "Check product-level refund rates",
-                "Review delivery failures",
-                "Check customer complaints",
-                "Compare refunds by product category"
+                "Review recent underwriting policy and approval overrides",
+                "Compare delinquency and NPA trends by origination cohort",
+                "Check borrower, product, and geography concentrations",
+                "Validate loan classification and provisioning data"
             ]
         }
 
     return None
 
-def evaluate_cost_revenue(results):
 
-    revenue = find_metric(
+def evaluate_transaction_concentration(results):
+    average_value = find_metric(
         results,
-        "Revenue"
+        "avg_transaction_value"
+    )
+    transaction_volume = find_metric(
+        results,
+        "daily_transaction_volume"
     )
 
-    cost = find_metric(
-        results,
-        "Cost"
-    )
-
-    if not revenue or not cost:
+    if not average_value or not transaction_volume:
         return None
 
-    revenue_change = revenue[
-        "percentage_change"
-    ]
-
-    cost_change = cost[
-        "percentage_change"
-    ]
+    average_value_deviation = average_value.get(
+        "baseline_deviation"
+    )
+    volume_deviation = transaction_volume.get(
+        "baseline_deviation"
+    )
 
     if (
-        revenue_change is not None
-        and cost_change is not None
-        and cost_change >= 20
-        and cost_change > revenue_change
+        average_value_deviation is not None
+        and volume_deviation is not None
+        and average_value_deviation >= 15
+        and volume_deviation <= -10
     ):
-
         return {
-            "type": "COST_REVENUE_MISMATCH",
-
+            "type": "TRANSACTION_CONCENTRATION_RISK",
             "severity": "WARNING",
-
             "metrics": [
-                "Revenue",
-                "Cost"
+                "avg_transaction_value",
+                "daily_transaction_volume"
             ],
-
             "observation": (
-                "Costs are increasing faster than "
-                "revenue."
+                "Average transaction value is above its recent baseline "
+                "while daily transaction volume is below its baseline."
             ),
-
             "possible_implication": (
-                "Profitability may be deteriorating "
-                "even if revenue is increasing."
+                "Activity may be concentrated in fewer or unusually "
+                "large transactions, increasing exposure to individual "
+                "counterparties or transactions."
             ),
-
             "recommended_checks": [
-                "Review acquisition costs",
-                "Check advertising spend",
-                "Analyze cost by channel",
-                "Calculate contribution margin"
+                "Review large-value transactions and counterparties",
+                "Compare concentration by customer, channel, and geography",
+                "Check for unusual account or transaction patterns",
+                "Confirm monitoring limits and escalation controls"
             ]
         }
 
     return None
 
-def evaluate_business_relationships(results):
 
+def evaluate_business_relationships(results):
     findings = []
 
-    traffic_finding = (
-        evaluate_traffic_conversion(results)
-    )
+    evaluators = [
+        evaluate_failed_transactions_and_chargebacks,
+        evaluate_disbursals_and_npa,
+        evaluate_transaction_concentration
+    ]
 
-    if traffic_finding:
-        findings.append(traffic_finding)
-
-    refund_finding = (
-        evaluate_refunds(results)
-    )
-
-    if refund_finding:
-        findings.append(refund_finding)
-
-    cost_finding = (
-        evaluate_cost_revenue(results)
-    )
-
-    if cost_finding:
-        findings.append(cost_finding)
+    for evaluator in evaluators:
+        finding = evaluator(results)
+        if finding:
+            findings.append(finding)
 
     return findings
-

@@ -2,106 +2,88 @@ import sys
 from pathlib import Path
 
 
-# ======================================================
-# ADD SRC TO PATH
-# ======================================================
-
-BASE_DIR = (
-    Path(__file__)
-    .resolve()
-    .parent
-    .parent
-)
-
+BASE_DIR = Path(__file__).resolve().parent.parent
 SRC_DIR = BASE_DIR / "src"
+sys.path.insert(0, str(SRC_DIR))
 
-sys.path.insert(
-    0,
-    str(SRC_DIR)
-)
+from business_rules import evaluate_business_relationships
 
 
-from business_rules import (
-    evaluate_business_relationships
-)
-
-
-# ======================================================
-# TEST BUSINESS RULE ENGINE
-# ======================================================
-
-def test_business_relationship_engine():
-
+def test_bfsi_relationship_rules_detect_all_risk_signals():
     results = [
-
         {
-            "metric": "Revenue",
-
-            "current_value": 800,
-
-            "percentage_change": -20,
-
-            "baseline_deviation": -18,
-
-            "z_score": -2.5,
-
-            "score": 80,
-
+            "metric": "failed_transaction_rate",
+            "percentage_change": 80,
+            "baseline_deviation": 50,
             "severity": "CRITICAL",
-
-            "business_impact": "HIGH",
-
-            "priority": "P0",
         },
-
         {
-            "metric": "Orders",
-
-            "current_value": 100,
-
-            "percentage_change": -5,
-
-            "baseline_deviation": -4,
-
-            "z_score": -1.2,
-
-            "score": 40,
-
-            "severity": "WARNING",
-
-            "business_impact": "MEDIUM",
-
-            "priority": "P2",
+            "metric": "chargeback_count",
+            "percentage_change": 90,
+            "baseline_deviation": 70,
+            "severity": "CRITICAL",
         },
-
+        {
+            "metric": "loan_disbursal_amount",
+            "percentage_change": 40,
+            "baseline_deviation": 35,
+            "severity": "CRITICAL",
+        },
+        {
+            "metric": "npa_ratio",
+            "percentage_change": 25,
+            "baseline_deviation": 20,
+            "severity": "CRITICAL",
+        },
+        {
+            "metric": "avg_transaction_value",
+            "percentage_change": 45,
+            "baseline_deviation": 40,
+            "severity": "CRITICAL",
+        },
+        {
+            "metric": "daily_transaction_volume",
+            "percentage_change": -30,
+            "baseline_deviation": -25,
+            "severity": "CRITICAL",
+        },
     ]
 
-    findings = (
-        evaluate_business_relationships(
-            results
-        )
+    findings = evaluate_business_relationships(results)
+
+    assert {
+        finding["type"]
+        for finding in findings
+    } == {
+        "TRANSACTION_FAILURE_CHARGEBACK_SPIKE",
+        "DISBURSAL_NPA_RISK",
+        "TRANSACTION_CONCENTRATION_RISK",
+    }
+    assert all(
+        {
+            "observation",
+            "severity",
+            "possible_implication",
+            "recommended_checks",
+        }.issubset(finding)
+        for finding in findings
     )
 
-    assert isinstance(
-        findings,
-        list
+
+def test_relationship_rules_require_both_related_metrics():
+    findings = evaluate_business_relationships(
+        [
+            {
+                "metric": "failed_transaction_rate",
+                "baseline_deviation": 50,
+                "percentage_change": 50,
+                "severity": "CRITICAL",
+            }
+        ]
     )
 
+    assert findings == []
 
-# ======================================================
-# TEST EMPTY RESULTS
-# ======================================================
 
 def test_empty_results():
-
-    findings = (
-        evaluate_business_relationships(
-            []
-        )
-    )
-
-    assert isinstance(
-        findings,
-        list
-    )
-
+    assert evaluate_business_relationships([]) == []

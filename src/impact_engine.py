@@ -8,45 +8,40 @@ def calculate_business_impact(
     of an anomaly.
     """
 
-    impact = "LOW"
+    impact = {
+        "CRITICAL": "HIGH",
+        "WARNING": "MEDIUM",
+    }.get(severity, "LOW")
 
-    if metric == "Revenue":
+    if percentage_change is None:
+        return impact
 
-        if severity == "CRITICAL":
-            impact = "HIGH"
+    if metric == "failed_transaction_rate":
+        if percentage_change >= 50:
+            return "HIGH"
+        if percentage_change >= 20:
+            return "MEDIUM"
 
-        elif severity == "WARNING":
-            impact = "MEDIUM"
+    elif metric == "chargeback_count":
+        if percentage_change >= 50:
+            return "HIGH"
+        if percentage_change >= 25:
+            return "MEDIUM"
 
-    elif metric == "Conversion_Rate":
+    elif metric == "npa_ratio":
+        if percentage_change >= 25:
+            return "HIGH"
+        if percentage_change >= 10:
+            return "MEDIUM"
 
-        if percentage_change is not None:
-
-            if percentage_change <= -20:
-                impact = "HIGH"
-
-            elif percentage_change <= -10:
-                impact = "MEDIUM"
-
-    elif metric == "Refunds":
-
-        if percentage_change is not None:
-
-            if percentage_change >= 50:
-                impact = "HIGH"
-
-            elif percentage_change >= 25:
-                impact = "MEDIUM"
-
-    elif metric == "Cost":
-
-        if percentage_change is not None:
-
-            if percentage_change >= 30:
-                impact = "HIGH"
-
-            elif percentage_change >= 15:
-                impact = "MEDIUM"
+    elif metric in {
+        "loan_disbursal_amount",
+        "avg_transaction_value"
+    }:
+        if percentage_change >= 50:
+            return "HIGH"
+        if percentage_change >= 25:
+            return "MEDIUM"
 
     return impact
 

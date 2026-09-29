@@ -2,18 +2,18 @@ import pandas as pd
 
 
 NUMERIC_COLUMNS = [
-    "Revenue",
-    "Orders",
-    "Conversion_Rate",
-    "Traffic",
-    "Cost",
-    "Refunds",
+    "daily_transaction_volume",
+    "avg_transaction_value",
+    "failed_transaction_rate",
+    "chargeback_count",
+    "loan_disbursal_amount",
+    "npa_ratio",
 ]
 
 
 def clean_data(df):
     """
-    Clean and standardize business data.
+    Clean and standardize BFSI transaction data.
     """
 
     df = df.copy()

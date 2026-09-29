@@ -1,17 +1,17 @@
 REQUIRED_COLUMNS = [
     "Date",
-    "Revenue",
-    "Orders",
-    "Conversion_Rate",
-    "Traffic",
-    "Cost",
-    "Refunds",
+    "daily_transaction_volume",
+    "avg_transaction_value",
+    "failed_transaction_rate",
+    "chargeback_count",
+    "loan_disbursal_amount",
+    "npa_ratio",
 ]
 
 
 def validate_columns(df):
     """
-    Check whether all required columns exist.
+    Check whether the date and BFSI metric columns exist.
     """
 
     missing_columns = [

@@ -1,5 +1,8 @@
+import os
 import sys
 from pathlib import Path
+
+import pytest
 
 
 # ======================================================
@@ -29,6 +32,11 @@ from history_db import (
     get_alert_history,
 )
 
+pytestmark = pytest.mark.skipif(
+    not os.getenv("DATABASE_URL"),
+    reason="PostgreSQL integration tests require DATABASE_URL."
+)
+
 
 # ======================================================
 # TEST DATABASE INITIALIZATION
@@ -50,7 +58,7 @@ def test_save_analysis():
     results = [
 
         {
-            "metric": "Revenue",
+            "metric": "daily_transaction_volume",
 
             "current_value": 1000,
 
@@ -130,4 +138,3 @@ def test_alert_history():
         df,
         "columns"
     )
-

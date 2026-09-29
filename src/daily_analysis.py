@@ -27,6 +27,7 @@ from metrics import (
     add_moving_average,
     add_baseline_deviation,
     add_z_scores,
+    validate_metric_schema,
 )
 
 from config import (
@@ -51,13 +52,13 @@ from pathlib import Path
 
 
 # ======================================================
-# ANALYZE LATEST BUSINESS DAY
+# ANALYZE LATEST TRANSACTION DATA DAY
 # ======================================================
 
 def analyze_latest_day(file_path):
     """
     Read, clean, analyze, and detect anomalies
-    for the latest available business day.
+    for the latest available transaction date.
     """
 
     # ==================================================
@@ -83,6 +84,8 @@ def analyze_latest_day(file_path):
     df = clean_data(
         df
     )
+
+    validate_metric_schema(df)
 
     # ==================================================
     # 4. SORT BY DATE
@@ -114,7 +117,7 @@ def analyze_latest_day(file_path):
     if df.empty:
 
         raise ValueError(
-            "No valid business data available "
+            "No valid BFSI data available "
             "after cleaning."
         )
 
@@ -165,7 +168,7 @@ def analyze_latest_day(file_path):
     )
 
     # ==================================================
-    # 10. GET LATEST BUSINESS DAY
+    # 10. GET LATEST TRANSACTION DATE
     # ==================================================
 
     latest = df.iloc[-1]
@@ -212,7 +215,7 @@ def analyze_latest_day(file_path):
 
 def run_full_analysis(file_path):
     """
-    Run the complete business anomaly monitoring pipeline.
+    Run the complete BFSI transaction-monitoring pipeline.
 
     Pipeline:
 
@@ -230,7 +233,7 @@ def run_full_analysis(file_path):
         ↓
         Report generation
         ↓
-        SQLite persistence
+        PostgreSQL persistence
         ↓
         Email alert
     """
@@ -251,14 +254,16 @@ def run_full_analysis(file_path):
         source_df
     )
 
+    validate_metric_schema(source_df)
+
     # ==================================================
-    # 3. DETERMINE LATEST BUSINESS DATE
+    # 3. DETERMINE LATEST TRANSACTION DATE
     # ==================================================
 
     if "Date" not in source_df.columns:
 
         raise ValueError(
-            "The business data must contain "
+            "The BFSI data must contain "
             "a 'Date' column."
         )
 
@@ -285,7 +290,7 @@ def run_full_analysis(file_path):
     if source_df.empty:
 
         raise ValueError(
-            "No valid business dates were found."
+            "No valid transaction dates were found."
         )
 
     latest_date = (
@@ -305,7 +310,7 @@ def run_full_analysis(file_path):
     )
 
     print(
-        "BUSINESS ANOMALY MONITOR"
+        "BFSI TRANSACTION MONITOR"
     )
 
     print(
@@ -313,7 +318,7 @@ def run_full_analysis(file_path):
     )
 
     print(
-        f"Business date being analyzed: "
+        f"Transaction date being analyzed: "
         f"{latest_date}"
     )
 
@@ -326,7 +331,7 @@ def run_full_analysis(file_path):
     )
 
     # ==================================================
-    # 5. BUSINESS RELATIONSHIP ANALYSIS
+    # 5. BFSI RISK RELATIONSHIP ANALYSIS
     # ==================================================
 
     business_findings = (
@@ -491,7 +496,7 @@ if __name__ == "__main__":
         )
 
         print(
-            "BUSINESS ANOMALY ANALYSIS"
+            "BFSI TRANSACTION RISK ANALYSIS"
         )
 
         print(
@@ -616,7 +621,7 @@ if __name__ == "__main__":
             )
 
             print(
-                f"Business Impact: "
+                f"Risk Impact: "
                 f"{result.get('business_impact')}"
             )
 
@@ -630,7 +635,7 @@ if __name__ == "__main__":
             )
 
         # ==================================================
-        # BUSINESS FINDINGS
+        # BFSI RISK FINDINGS
         # ==================================================
 
         print()
@@ -639,7 +644,7 @@ if __name__ == "__main__":
         )
 
         print(
-            "BUSINESS FINDINGS"
+            "BFSI RISK FINDINGS"
         )
 
         print(
@@ -650,7 +655,7 @@ if __name__ == "__main__":
 
             print()
             print(
-                "No significant business "
+                "No significant transaction or credit-risk "
                 "relationships were detected."
             )
 
@@ -707,7 +712,7 @@ if __name__ == "__main__":
         )
 
         print(
-            "AI BUSINESS ANALYSIS"
+            "AI BFSI RISK ANALYSIS"
         )
 
         print(

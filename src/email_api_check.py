@@ -4,7 +4,7 @@ from email_alert import send_alert_email
 test_results = [
 
     {
-        "metric": "Revenue",
+        "metric": "failed_transaction_rate",
 
         "current_value": 150000,
 
@@ -28,23 +28,23 @@ test_results = [
 test_findings = [
 
     {
-        "type": "REVENUE_DECLINE",
+        "type": "FAILED_TRANSACTION_SPIKE",
 
         "severity": "CRITICAL",
 
         "observation": (
-            "Revenue has declined significantly."
+            "The failed transaction rate has increased significantly."
         ),
 
         "possible_implication": (
-            "The decline may indicate a problem "
-            "with demand, conversion, or sales."
+            "The increase may indicate a possible payment-fraud "
+            "pattern or a payment-processing issue."
         ),
 
         "recommended_checks": [
-            "Review traffic sources",
-            "Check conversion rate",
-            "Review recent campaigns",
+            "Review affected transactions for fraud indicators",
+            "Compare failed transactions by payment channel",
+            "Check payment gateway and authentication health",
         ],
     }
 ]
@@ -53,22 +53,22 @@ test_findings = [
 test_ai_summary = {
 
     "executive_summary": (
-        "Revenue has declined significantly "
-        "and requires immediate investigation."
+        "The failed transaction rate increased significantly "
+        "and requires immediate review."
     ),
 
     "key_findings": [
-        "Revenue decreased significantly."
+        "Failed transaction rate increased significantly."
     ],
 
     "possible_causes": [
-        "Lower conversion",
-        "Reduced traffic quality",
+        "Possible transaction fraud",
+        "Payment-processing disruption",
     ],
 
     "recommended_actions": [
-        "Review acquisition channels",
-        "Check conversion performance",
+        "Review affected transactions",
+        "Check payment channel and authentication performance",
     ],
 
     "priority_message": (
@@ -86,4 +86,3 @@ result = send_alert_email(
 print(
     f"Email test result: {result}"
 )
-

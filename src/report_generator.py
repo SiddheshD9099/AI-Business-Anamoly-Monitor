@@ -39,7 +39,7 @@ def generate_report(
     ai_summary=None
 ):
     """
-    Generate a complete business anomaly report.
+    Generate a complete BFSI transaction-monitoring report.
     """
 
     if business_findings is None:
@@ -61,7 +61,7 @@ def generate_report(
     )
 
     lines.append(
-        "BUSINESS ANOMALY REPORT"
+        "BFSI TRANSACTION MONITORING REPORT"
     )
 
     lines.append(
@@ -118,7 +118,7 @@ def generate_report(
     )
 
     lines.append(
-        f"High-impact metrics: {len(high_impact)}"
+        f"High-risk-impact metrics: {len(high_impact)}"
     )
 
     lines.append("")
@@ -174,7 +174,7 @@ def generate_report(
         )
 
         lines.append(
-            f"Business impact: "
+            f"Risk impact: "
             f"{result.get('business_impact', 'N/A')}"
         )
 
@@ -189,7 +189,7 @@ def generate_report(
 
     lines.append("")
     lines.append(
-        "BUSINESS FINDINGS"
+        "BFSI RISK FINDINGS"
     )
     lines.append(
         "-" * 70
@@ -198,7 +198,7 @@ def generate_report(
     if not business_findings:
 
         lines.append(
-            "No significant business relationships detected."
+            "No significant transaction or credit-risk relationships detected."
         )
 
     else:
@@ -244,7 +244,7 @@ def generate_report(
 
     lines.append("")
     lines.append(
-        "AI BUSINESS SUMMARY"
+        "AI BFSI RISK SUMMARY"
     )
     lines.append(
         "-" * 70
@@ -347,4 +347,3 @@ def generate_report(
     )
 
     return "\n".join(lines)
-

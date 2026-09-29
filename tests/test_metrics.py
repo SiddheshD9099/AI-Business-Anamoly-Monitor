@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 
 # ======================================================
@@ -28,6 +29,8 @@ from metrics import (
     add_moving_average,
     add_baseline_deviation,
     add_z_scores,
+    METRIC_COLUMNS,
+    validate_metric_schema,
 )
 
 
@@ -44,7 +47,7 @@ def create_test_dataframe():
             periods=10
         ),
 
-        "Revenue": [
+        "daily_transaction_volume": [
             100,
             110,
             105,
@@ -57,7 +60,7 @@ def create_test_dataframe():
             150,
         ],
 
-        "Orders": [
+        "avg_transaction_value": [
             10,
             11,
             10,
@@ -73,6 +76,30 @@ def create_test_dataframe():
     })
 
 
+def test_validate_bfsi_metric_schema():
+    df = pd.DataFrame(
+        {
+            column: range(10)
+            for column in METRIC_COLUMNS
+        }
+    )
+
+    assert validate_metric_schema(df)
+
+
+def test_metric_schema_reports_missing_column():
+    df = pd.DataFrame(
+        {
+            column: range(10)
+            for column in METRIC_COLUMNS
+            if column != "npa_ratio"
+        }
+    )
+
+    with pytest.raises(ValueError, match="npa_ratio"):
+        validate_metric_schema(df)
+
+
 # ======================================================
 # TEST PERCENTAGE CHANGE
 # ======================================================
@@ -83,18 +110,18 @@ def test_percentage_change():
 
     result = add_percentage_changes(
         df,
-        ["Revenue"]
+        ["daily_transaction_volume"]
     )
 
     assert (
-        "Revenue_Change"
+        "daily_transaction_volume_Change"
         in result.columns
     )
 
     # 110 compared with 100 = +10%
     assert round(
         result.iloc[1][
-            "Revenue_Change"
+            "daily_transaction_volume_Change"
         ],
         2
     ) == 10.00
@@ -110,12 +137,12 @@ def test_moving_average():
 
     result = add_moving_average(
         df,
-        ["Revenue"],
+        ["daily_transaction_volume"],
         window=7
     )
 
     assert (
-        "Revenue_MA"
+        "daily_transaction_volume_MA"
         in result.columns
     )
 
@@ -130,17 +157,17 @@ def test_baseline_deviation():
 
     df = add_moving_average(
         df,
-        ["Revenue"],
+        ["daily_transaction_volume"],
         window=7
     )
 
     result = add_baseline_deviation(
         df,
-        ["Revenue"]
+        ["daily_transaction_volume"]
     )
 
     assert (
-        "Revenue_Baseline_Deviation"
+        "daily_transaction_volume_Baseline_Deviation"
         in result.columns
     )
 
@@ -155,12 +182,11 @@ def test_z_score():
 
     result = add_z_scores(
         df,
-        ["Revenue"],
+        ["daily_transaction_volume"],
         window=7
     )
 
     assert (
-        "Revenue_ZScore"
+        "daily_transaction_volume_ZScore"
         in result.columns
     )
-

@@ -34,7 +34,7 @@ def test_normal_metric():
 
     result = analyze_metric(
 
-        metric="Revenue",
+        metric="daily_transaction_volume",
 
         current_value=1000,
 
@@ -52,7 +52,7 @@ def test_normal_metric():
 
     assert (
         result["metric"]
-        == "Revenue"
+        == "daily_transaction_volume"
     )
 
 
@@ -64,7 +64,7 @@ def test_large_anomaly():
 
     result = analyze_metric(
 
-        metric="Revenue",
+        metric="daily_transaction_volume",
 
         current_value=500,
 
@@ -82,7 +82,7 @@ def test_large_anomaly():
 
     assert (
         result["metric"]
-        == "Revenue"
+        == "daily_transaction_volume"
     )
 
     assert (
@@ -99,7 +99,7 @@ def test_required_fields():
 
     result = analyze_metric(
 
-        metric="Orders",
+        metric="chargeback_count",
 
         current_value=100,
 
@@ -134,4 +134,3 @@ def test_required_fields():
     for field in required_fields:
 
         assert field in result
-

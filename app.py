@@ -35,7 +35,8 @@ from daily_analysis import (
 from history_db import (
     get_metric_history,
     get_run_history,
-    get_alert_history
+    get_alert_history,
+    database_health_check,
 )
 
 
@@ -44,7 +45,7 @@ from history_db import (
 # ======================================================
 
 st.set_page_config(
-    page_title="AI Business Anomaly Monitor",
+    page_title="AI BFSI Transaction Monitor",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -90,15 +91,15 @@ st.markdown(
 
 st.markdown(
     '<div class="main-title">'
-    'AI Business Anomaly Monitor'
+    'AI BFSI Transaction Monitor'
     '</div>',
     unsafe_allow_html=True
 )
 
 st.markdown(
     '<div class="subtitle">'
-    'Automated statistical monitoring and '
-    'AI-powered business intelligence'
+    'Automated transaction monitoring for fraud indicators, '
+    'credit risk, and underwriting signals'
     '</div>',
     unsafe_allow_html=True
 )
@@ -114,7 +115,7 @@ st.sidebar.title(
 
 st.sidebar.info(
     "The dashboard analyzes the latest available "
-    "business data from the Excel source."
+    "BFSI transaction metrics from the Excel source."
 )
 
 st.sidebar.markdown(
@@ -125,9 +126,13 @@ st.sidebar.caption(
     "System Status"
 )
 
-st.sidebar.success(
-    "Database: Connected"
-)
+try:
+    if database_health_check():
+        st.sidebar.success("PostgreSQL: Connected")
+    else:
+        st.sidebar.error("PostgreSQL: Health check failed")
+except Exception as error:
+    st.sidebar.error(f"PostgreSQL: Unavailable ({error})")
 
 st.sidebar.success(
     "Analysis Engine: Ready"
@@ -171,7 +176,7 @@ if (
     try:
 
         with st.spinner(
-            "Analyzing business data..."
+            "Analyzing BFSI transaction data..."
         ):
 
             (
@@ -328,7 +333,7 @@ with col3:
 with col4:
 
     st.metric(
-        "High Business Impact",
+        "High Risk Impact",
         high_impact_count
     )
 
@@ -380,7 +385,7 @@ for result in results:
                 "severity"
             ),
 
-        "Business Impact":
+        "Risk Impact":
             result.get(
                 "business_impact"
             ),
@@ -712,7 +717,7 @@ else:
 
 st.markdown(
     '<div class="section-title">'
-    'Business Findings'
+    'BFSI Risk Findings'
     '</div>',
     unsafe_allow_html=True
 )
@@ -721,8 +726,8 @@ st.markdown(
 if not business_findings:
 
     st.info(
-        "No significant business relationships "
-        "were detected."
+        "No significant transaction or credit-risk "
+        "relationships were detected."
     )
 
 else:
@@ -736,7 +741,7 @@ else:
 
         finding_type = finding.get(
             "type",
-            "Business Finding"
+            "Risk Finding"
         )
 
         observation = finding.get(
@@ -1069,7 +1074,7 @@ st.markdown(
 st.download_button(
     label="Download Anomaly Report",
     data=report,
-    file_name="business_anomaly_report.txt",
+    file_name="bfsi_transaction_monitor_report.txt",
     mime="text/plain",
     use_container_width=True
 )
@@ -1082,4 +1087,3 @@ st.download_button(
 st.caption(
     f"Analysis Run ID: {run_id}"
 )
-

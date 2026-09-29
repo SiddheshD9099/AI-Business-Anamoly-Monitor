@@ -8,16 +8,17 @@ from metrics import (
     add_moving_average,
     add_baseline_deviation,
     add_z_scores,
+    validate_metric_schema,
 )
 
 
 METRICS = [
-    "Revenue",
-    "Orders",
-    "Conversion_Rate",
-    "Traffic",
-    "Cost",
-    "Refunds",
+    "daily_transaction_volume",
+    "avg_transaction_value",
+    "failed_transaction_rate",
+    "chargeback_count",
+    "loan_disbursal_amount",
+    "npa_ratio",
 ]
 
 
@@ -31,6 +32,8 @@ def analyze_business_data(file_path):
 
     # 3. Clean
     df = clean_data(df)
+
+    validate_metric_schema(df)
 
     # 4. Percentage changes
     df = add_percentage_changes(
@@ -46,17 +49,17 @@ def analyze_business_data(file_path):
     )
 
     df = add_baseline_deviation(
-    df,
-    METRICS
+        df,
+        METRICS
+    )
+
+    df = add_z_scores(
+        df,
+        METRICS,
+        window=7
     )
 
     return df
-
-    df = add_z_scores(
-    df,
-    METRICS,
-    window=7
-    )
 
 
 if __name__ == "__main__":
