@@ -1,4 +1,4 @@
-# AI Business Anomaly Monitor
+# BFSI-transaction-AI-anomaly-monitor
 
 An automated business intelligence monitoring system that analyzes operational metrics, detects unusual changes, identifies potential business-impact relationships, generates AI-assisted explanations, stores historical analysis, and sends deduplicated email alerts.
 
